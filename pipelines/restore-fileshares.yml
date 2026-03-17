@@ -1,0 +1,56 @@
+trigger: none
+
+parameters:
+- name: environment
+  type: string
+  values: [ uat, prod ]
+
+variables:
+- group: vg-${{ parameters.environment }}
+
+stages:
+
+# ==============================
+# UAT STAGE
+# ==============================
+- stage: UAT
+  condition: eq('${{ parameters.environment }}', 'uat')
+  jobs:
+  - job: RestoreUAT
+    steps:
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'uat-service-connection'
+        scriptType: bash
+        scriptLocation: scriptPath
+        scriptPath: scripts/restore-fileshares.sh
+      env:
+        ENVIRONMENT: uat
+        RESOURCE_GROUP: $(resource_group)
+        VAULT_NAME: $(recovery_vault)
+        STORAGE_ACCOUNT: $(storage_account)
+
+# ==============================
+# PROD STAGE (WITH APPROVAL)
+# ==============================
+- stage: PROD
+  condition: eq('${{ parameters.environment }}', 'prod')
+  dependsOn: []
+  jobs:
+  - deployment: RestoreProd
+    environment: prod # enables approval gate
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'prod-service-connection'
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: scripts/restore-fileshares.sh
+            env:
+              ENVIRONMENT: prod
+              RESOURCE_GROUP: $(resource_group)
+              VAULT_NAME: $(recovery_vault)
+              STORAGE_ACCOUNT: $(storage_account)
