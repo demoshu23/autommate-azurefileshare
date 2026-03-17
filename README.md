@@ -49,11 +49,13 @@ az storage file upload \
   --account-key $KEY \
   --share-name fileshare-uat \
   --source file2.txt
+  
 5️⃣ Create Recovery Services Vault
 az backup vault create \
   --name rsv-uat \
   --resource-group rg-uat \
   --location eastus2
+  
 6️⃣ Set Backup Policy for Azure Files
 az backup policy create \
   --vault-name rsv-uat \
@@ -64,6 +66,7 @@ az backup policy create \
   --backup-schedule-frequency Daily \
   --backup-schedule-time 23:00 \
   --retention-daily 7
+  
 7️⃣ Enable Protection (Link File Share to Vault)
 az backup protection enable-for-azurefileshare \
   --vault-name rsv-uat \
@@ -71,6 +74,7 @@ az backup protection enable-for-azurefileshare \
   --storage-account stuatbackup001 \
   --azure-file-share fileshare-uat \
   --policy-name policy-uat
+  
 8️⃣ Trigger Initial Backup (so recovery points exist)
 az backup protection backup-now \
   --vault-name rsv-uat \
